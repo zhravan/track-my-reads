@@ -1,4 +1,4 @@
-# Tracking my TBR (to be read)
+# personal-good-reads
 
 Use **Issues** (no edits to this repo). Shorthand: `[r]` = add, `[d]` = done.
 
