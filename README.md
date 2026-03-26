@@ -1,4 +1,4 @@
-# Track My Reads
+# personal-good-reads
 
 Use **Issues** (no edits to this repo). Shorthand: `[r]` = add, `[d]` = done.
 
@@ -59,6 +59,8 @@ https://example.org/guide
 - [https://huyenchip.com/mlops](https://huyenchip.com/mlops)
 - [https://pages.run.ai/hubfs/PDFs/Complete-Guide-to-MLOps.pdf](https://pages.run.ai/hubfs/PDFs/Complete-Guide-to-MLOps.pdf)
 - [https://blog.infocruncher.com/resources/ml-productionisation/The%20Big%20Book%20of%20MLOps%20(Databricks,%20v6,%202022).pdf](https://blog.infocruncher.com/resources/ml-productionisation/The%20Big%20Book%20of%20MLOps%20(Databricks,%20v6,%202022).pdf)
+- [http://103.203.175.90:81/fdScript/RootOfEBooks/E%20Book%20collection%20-%202025%20-%20C/CSE%20%20IT%20AIDS%20ML/MLOps%20Engineering%20at%20Scale%20-%20Carl%20Osipov%20(Manning,%202022).pdf](http://103.203.175.90:81/fdScript/RootOfEBooks/E%20Book%20collection%20-%202025%20-%20C/CSE%20%20IT%20AIDS%20ML/MLOps%20Engineering%20at%20Scale%20-%20Carl%20Osipov%20(Manning,%202022).pdf)
+- [https://virtualmmx.ddns.net/gbooks/EngineeringMLOps.pdf](https://virtualmmx.ddns.net/gbooks/EngineeringMLOps.pdf)
 
 ## Done (recent)
 
