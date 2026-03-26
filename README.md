@@ -1,6 +1,9 @@
-# Track My Reads
+# personal-good-reads
 
 Use **Issues** (no edits to this repo). Shorthand: `[r]` = add, `[d]` = done.
+
+<details>
+<summary><strong>How to use</strong></summary>
 
 ## Add
 
@@ -28,7 +31,7 @@ https://example.com/article-one | Great post
 https://example.org/guide
 ```
 
-1. **Submit** (Create). GitHub Actions runs; this README’s **To read** gains those links; the issue closes with a bot comment.
+4. **Submit** (Create). GitHub Actions runs; this README’s **To read** gains those links; the issue closes with a bot comment.
 
 **Mark one as read**
 
@@ -46,6 +49,8 @@ https://example.org/guide
 - This workflow file must be on your **default branch** (`main` / `master`) and **Actions** must be enabled.
 - On **GitHub**, open the repo root on the default branch and refresh; **locally**, run `git pull` — the bot commits there, not on your machine.
 - After fixing the workflow, open a **new** `[read]` issue (or re-run the failed workflow if GitHub offers it).
+
+</details>
 
 </details>
 
