@@ -1,0 +1,80 @@
+name: Good reads
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - "ADD_HERE.md"
+      - "MARK_DONE.md"
+      - ".good-reads/queue.txt"
+      - ".good-reads/done.txt"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "add-read | mark-done | sync-only"
+        required: true
+        default: "sync-only"
+        type: choice
+        options:
+          - add-read
+          - mark-done
+          - sync-only
+      url:
+        description: "URL (required for add-read / mark-done)"
+        required: false
+        type: string
+      title:
+        description: "Optional title (add-read only)"
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: good-reads-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Apply workflow_dispatch inputs
+        if: github.event_name == 'workflow_dispatch' && inputs.mode == 'add-read' && inputs.url != ''
+        env:
+          TITLE: ${{ inputs.title }}
+          URL: ${{ inputs.url }}
+        run: |
+          line="$URL"
+          if [ -n "$TITLE" ]; then
+            line="$URL | $TITLE"
+          fi
+          echo "GOOD_READS_ADD<<EOF" >> "$GITHUB_ENV"
+          echo "$line" >> "$GITHUB_ENV"
+          echo "EOF" >> "$GITHUB_ENV"
+
+      - name: Apply mark-done from dispatch
+        if: github.event_name == 'workflow_dispatch' && inputs.mode == 'mark-done' && inputs.url != ''
+        env:
+          URL: ${{ inputs.url }}
+        run: |
+          echo "GOOD_READS_MARK<<EOF" >> "$GITHUB_ENV"
+          echo "$URL" >> "$GITHUB_ENV"
+          echo "EOF" >> "$GITHUB_ENV"
+
+      - name: Sync queue, README, paste files
+        run: python3 .github/scripts/sync_good_reads.py
+
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md ADD_HERE.md MARK_DONE.md .good-reads/queue.txt .good-reads/done.txt
+          if git diff --staged --quiet; then
+            echo "No changes."
+            exit 0
+          fi
+          git commit -m "chore(good-reads): sync queue and README"
+          git push
