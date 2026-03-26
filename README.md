@@ -1,4 +1,4 @@
-# personal-good-reads
+# Track My Reads
 
 Use **Issues** (no edits to this repo). Shorthand: `[r]` = add, `[d]` = done.
 
@@ -28,7 +28,7 @@ https://example.com/article-one | Great post
 https://example.org/guide
 ```
 
-4. **Submit** (Create). GitHub Actions runs; this README’s **To read** gains those links; the issue closes with a bot comment.
+1. **Submit** (Create). GitHub Actions runs; this README’s **To read** gains those links; the issue closes with a bot comment.
 
 **Mark one as read**
 
