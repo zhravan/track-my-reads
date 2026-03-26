@@ -1,13 +1,8 @@
 name: Good reads
 
 on:
-  push:
-    branches: [main, master]
-    paths:
-      - "ADD_HERE.md"
-      - "MARK_DONE.md"
-      - ".good-reads/queue.txt"
-      - ".good-reads/done.txt"
+  issues:
+    types: [opened]
   workflow_dispatch:
     inputs:
       mode:
@@ -20,7 +15,7 @@ on:
           - mark-done
           - sync-only
       url:
-        description: "URL (required for add-read / mark-done)"
+        description: "URL (add-read / mark-done)"
         required: false
         type: string
       title:
@@ -30,6 +25,7 @@ on:
 
 permissions:
   contents: write
+  issues: write
 
 concurrency:
   group: good-reads-${{ github.ref }}
@@ -38,10 +34,45 @@ concurrency:
 jobs:
   sync:
     runs-on: ubuntu-latest
+    if: >-
+      github.event_name != 'issues' || (
+        startsWith(toLower(github.event.issue.title), '[read]') ||
+        startsWith(toLower(github.event.issue.title), '[r]') ||
+        startsWith(toLower(github.event.issue.title), '[done]') ||
+        startsWith(toLower(github.event.issue.title), '[d]')
+      )
     steps:
       - uses: actions/checkout@v4
 
-      - name: Apply workflow_dispatch inputs
+      - name: Issue → add
+        if: github.event_name == 'issues' && (startsWith(toLower(github.event.issue.title), '[read]') || startsWith(toLower(github.event.issue.title), '[r]'))
+        run: |
+          d="DELIM_${{ github.run_id }}"
+          {
+            echo "GOOD_READS_ISSUE_MODE=add"
+            echo "GOOD_READS_ISSUE_TITLE<<$d"
+            echo "${{ github.event.issue.title }}"
+            echo "$d"
+            echo "GOOD_READS_ISSUE_BODY<<$d"
+            echo "${{ github.event.issue.body || '' }}"
+            echo "$d"
+          } >> "$GITHUB_ENV"
+
+      - name: Issue → done
+        if: github.event_name == 'issues' && (startsWith(toLower(github.event.issue.title), '[done]') || startsWith(toLower(github.event.issue.title), '[d]'))
+        run: |
+          d="DELIM_${{ github.run_id }}"
+          {
+            echo "GOOD_READS_ISSUE_MODE=done"
+            echo "GOOD_READS_ISSUE_TITLE<<$d"
+            echo "${{ github.event.issue.title }}"
+            echo "$d"
+            echo "GOOD_READS_ISSUE_BODY<<$d"
+            echo "${{ github.event.issue.body || '' }}"
+            echo "$d"
+          } >> "$GITHUB_ENV"
+
+      - name: Apply workflow_dispatch (add-read)
         if: github.event_name == 'workflow_dispatch' && inputs.mode == 'add-read' && inputs.url != ''
         env:
           TITLE: ${{ inputs.title }}
@@ -51,30 +82,75 @@ jobs:
           if [ -n "$TITLE" ]; then
             line="$URL | $TITLE"
           fi
-          echo "GOOD_READS_ADD<<EOF" >> "$GITHUB_ENV"
-          echo "$line" >> "$GITHUB_ENV"
-          echo "EOF" >> "$GITHUB_ENV"
+          {
+            echo "GOOD_READS_ADD<<__ADD__"
+            echo "$line"
+            echo "__ADD__"
+          } >> "$GITHUB_ENV"
 
-      - name: Apply mark-done from dispatch
+      - name: Apply workflow_dispatch (mark-done)
         if: github.event_name == 'workflow_dispatch' && inputs.mode == 'mark-done' && inputs.url != ''
         env:
           URL: ${{ inputs.url }}
         run: |
-          echo "GOOD_READS_MARK<<EOF" >> "$GITHUB_ENV"
-          echo "$URL" >> "$GITHUB_ENV"
-          echo "EOF" >> "$GITHUB_ENV"
+          {
+            echo "GOOD_READS_MARK<<__MARK__"
+            echo "$URL"
+            echo "__MARK__"
+          } >> "$GITHUB_ENV"
 
-      - name: Sync queue, README, paste files
+      - name: Sync queue and README
         run: python3 .github/scripts/sync_good_reads.py
 
       - name: Commit if changed
+        id: commit
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add README.md ADD_HERE.md MARK_DONE.md .good-reads/queue.txt .good-reads/done.txt
+          git add README.md .good-reads/queue.txt .good-reads/done.txt
           if git diff --staged --quiet; then
-            echo "No changes."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           git commit -m "chore(good-reads): sync queue and README"
           git push
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Close issue
+        if: success() && github.event_name == 'issues'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+        run: |
+          REPO="${{ github.repository }}"
+          NUM="${{ github.event.issue.number }}"
+          TITLE_LC=$(printf '%s' "$ISSUE_TITLE" | tr '[:upper:]' '[:lower:]')
+          changed="${{ steps.commit.outputs.changed }}"
+          README_URL="https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/README.md"
+
+          is_add=0
+          if [[ "$TITLE_LC" == '[read]'* ]] || { [[ "$TITLE_LC" == '[r]'* ]] && [[ "$TITLE_LC" != '[read]'* ]]; }; then
+            is_add=1
+          fi
+          is_done=0
+          if [[ "$TITLE_LC" == '[done]'* ]] || { [[ "$TITLE_LC" == '[d]'* ]] && [[ "$TITLE_LC" != '[done]'* ]]; }; then
+            is_done=1
+          fi
+
+          if [ "$changed" = "true" ]; then
+            if [ "$is_add" = "1" ]; then
+              gh issue close "$NUM" --repo "$REPO" --comment "Added to **To read** in [README]($README_URL)."
+            elif [ "$is_done" = "1" ]; then
+              gh issue close "$NUM" --repo "$REPO" --comment "Moved to **Done** in [README]($README_URL)."
+            fi
+          else
+            gh issue close "$NUM" --repo "$REPO" --comment "No file changes (link may already be in the queue). See [README]($README_URL)."
+          fi
+
+      - name: Comment on issue (sync failed)
+        if: failure() && github.event_name == 'issues'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue comment "${{ github.event.issue.number }}" --repo "${{ github.repository }}" \
+            --body "Could not update the list (missing URL, URL not in the queue, or another error). Check the [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})."

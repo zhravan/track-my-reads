@@ -1,26 +1,22 @@
 # personal-good-reads
 
-Queue and done list are driven by GitHub Actions — no PR workflow required.
+Use **Issues** (no edits to this repo). Shorthand: `[r]` = add, `[d]` = done.
 
-## How to add
+## Add
 
-1. Open [`ADD_HERE.md`](ADD_HERE.md) on GitHub.
-2. Paste URLs (one per line). Optional: `https://… | Title`.
-3. Commit. The workflow appends to the queue and clears the paste area.
+1. New issue → title starts with **`[read]`**
+2. Paste links in the description (one per line; optional `url | title`)
+3. Submit — list updates here; issue auto-closes
 
-Or: **Actions → Good reads → Run workflow → add-read** and fill the form.
+## Mark done
 
-## How to mark done
-
-1. Open [`MARK_DONE.md`](MARK_DONE.md).
-2. Paste the **exact** URL(s) you finished (one per line).
-3. Commit. Items move to **Done** below.
-
-Or: **Actions → Good reads → Run workflow → mark-done**.
+1. New issue → title starts with **`[done]`**
+2. Paste the same URL(s) as in **To read**
+3. Submit — they go under **Done (recent)**; issue auto-closes
 
 ## To read
 
-_Nothing queued. Add via ADD_HERE or the workflow._
+_Empty — add with a `[read]` issue._
 
 ## Done (recent)
 
