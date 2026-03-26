@@ -34,12 +34,19 @@ concurrency:
 jobs:
   sync:
     runs-on: ubuntu-latest
+    # Expressions have no toLower(); match common casings (Python still normalizes intent).
     if: >-
       github.event_name != 'issues' || (
-        startsWith(toLower(github.event.issue.title), '[read]') ||
-        startsWith(toLower(github.event.issue.title), '[r]') ||
-        startsWith(toLower(github.event.issue.title), '[done]') ||
-        startsWith(toLower(github.event.issue.title), '[d]')
+        startsWith(github.event.issue.title, '[read]') ||
+        startsWith(github.event.issue.title, '[Read]') ||
+        startsWith(github.event.issue.title, '[READ]') ||
+        startsWith(github.event.issue.title, '[r]') ||
+        startsWith(github.event.issue.title, '[R]') ||
+        startsWith(github.event.issue.title, '[done]') ||
+        startsWith(github.event.issue.title, '[Done]') ||
+        startsWith(github.event.issue.title, '[DONE]') ||
+        startsWith(github.event.issue.title, '[d]') ||
+        startsWith(github.event.issue.title, '[D]')
       )
     steps:
       - uses: actions/checkout@v4
